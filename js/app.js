@@ -20,7 +20,7 @@ angular.module('starter', ['ionic', 'GoogleLoginService'])
         .controller('google', function ($scope, googleLogin) {
             $scope.google_data = {};
             $scope.login = function () {
-                var promise = googleLogin.authorize();
+                var promise = googleLogin.startLogin();
                 promise.then(function (data) {
                     $scope.google_data = data;
                 }, function (data) {

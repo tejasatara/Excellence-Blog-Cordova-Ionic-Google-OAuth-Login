@@ -52,7 +52,7 @@ googleLoginService.factory('googleLogin', [
     function ($http, $q, $interval, $log, timeStorage) {
         var service = {};
         service.access_token = false;
-        service.redirect_uri = 'http://127.0.0.1:81/google_demo/www/';
+        service.redirect_url = 'http://127.0.0.1:81/google_demo/www/';
         service.client_id = '789799094420-uuak74v7em9o9a2ek9fd5v1hiki9knmi.apps.googleusercontent.com';
         service.secret = 'n_h_eHTdXLn2AUeKSy6NVaYk';
         service.scope = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/plus.me';
@@ -89,18 +89,20 @@ googleLoginService.factory('googleLogin', [
 //            }
 
         };
-        service.authorize = function () {
+        service.authorize = function (options) {
             var def = $q.defer();
+            var self = this;
 
             var access_token = timeStorage.get('google_access_token');
             if (access_token) {
                 $log.info('Direct Access Token :' + access_token);
                 service.getUserInfo(access_token, def);
             } else {
-                var params = 'client_id=' + encodeURIComponent(service.client_id);
-                params += '&redirect_uri=' + encodeURIComponent(service.redirect_uri);
+
+                var params = 'client_id=' + encodeURIComponent(options.client_id);
+                params += '&redirect_uri=' + encodeURIComponent(options.redirect_uri);
                 params += '&response_type=code';
-                params += '&scope=' + encodeURIComponent(service.scope);
+                params += '&scope=' + encodeURIComponent(options.scope);
                 var authUrl = 'https://accounts.google.com/o/oauth2/auth?' + params;
 
                 var win = window.open(authUrl, '_blank', 'location=no,toolbar=no,width=800, height=800');
@@ -110,8 +112,8 @@ googleLoginService.factory('googleLogin', [
                     console.log('using in app browser');
                     win.addEventListener('loadstart', function (data) {
                         console.log('load start');
-                        if (data.url.indexOf(context.redirect_uri) !== -1) {
-                            console.log('redirect url found ' + context.redirect_uri);
+                        if (data.url.indexOf(context.redirect_url) !== -1) {
+                            console.log('redirect url found ' + context.redirect_url);
                             win.close();
                             var url = data.url;
                             var access_code = context.gulp(url, 'code');
@@ -124,11 +126,11 @@ googleLoginService.factory('googleLogin', [
 
                     });
                 } else {
-                    console.log('InAppBrowser not present');
+                    console.log('InAppBrowser not found11');
                     var pollTimer = $interval(function () {
                         try {
                             console.log("google window url " + win.document.URL);
-                            if (win.document.URL.indexOf(context.redirect_uri) !== -1) {
+                            if (win.document.URL.indexOf(context.redirect_url) !== -1) {
                                 console.log('redirect url found');
                                 win.close();
                                 $interval.cancel(pollTimer);
@@ -158,7 +160,7 @@ googleLoginService.factory('googleLogin', [
                 params: {
                     client_id: this.client_id,
                     client_secret: this.secret,
-                    redirect_uri: this.redirect_uri,
+                    redirect_uri: this.redirect_url,
                     code: token,
                     grant_type: 'authorization_code'
                 }
@@ -218,7 +220,7 @@ googleLoginService.factory('googleLogin', [
             var promise = this.authorize({
                 client_id: this.client_id,
                 client_secret: this.secret,
-                redirect_uri: this.redirect_uri,
+                redirect_uri: this.redirect_url,
                 scope: this.scope
             });
             promise.then(function (data) {
