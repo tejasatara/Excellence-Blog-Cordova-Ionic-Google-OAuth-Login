@@ -112,8 +112,9 @@ googleLoginService.factory('googleLogin', [
                     console.log('using in app browser');
                     win.addEventListener('loadstart', function (data) {
                         console.log('load start');
-                        if (data.url.indexOf(context.redirect_url) !== -1) {
+                        if (data.url.indexOf(context.redirect_url) === 0) {
                             console.log('redirect url found ' + context.redirect_url);
+                            console.log('window url found ' + data.url);
                             win.close();
                             var url = data.url;
                             var access_code = context.gulp(url, 'code');
@@ -130,7 +131,7 @@ googleLoginService.factory('googleLogin', [
                     var pollTimer = $interval(function () {
                         try {
                             console.log("google window url " + win.document.URL);
-                            if (win.document.URL.indexOf(context.redirect_url) !== -1) {
+                            if (win.document.URL.indexOf(context.redirect_url) === 0) {
                                 console.log('redirect url found');
                                 win.close();
                                 $interval.cancel(pollTimer);
@@ -153,16 +154,18 @@ googleLoginService.factory('googleLogin', [
             return def.promise;
         };
         service.validateToken = function (token, def) {
+            $log.info('Code: ' + token);
             var http = $http({
                 url: 'https://www.googleapis.com/oauth2/v3/token',
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 params: {
+                    code: token,
                     client_id: this.client_id,
                     client_secret: this.secret,
                     redirect_uri: this.redirect_url,
-                    code: token,
-                    grant_type: 'authorization_code'
+                    grant_type: 'authorization_code',
+                    scope: ''
                 }
             });
             var context = this;
